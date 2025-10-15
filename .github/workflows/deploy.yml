@@ -148,6 +148,7 @@ jobs:
           cp ../website.tar vertx-doc-${project_branch}_build.tar.gz
           ls
 
+
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
