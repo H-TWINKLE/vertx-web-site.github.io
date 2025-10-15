@@ -3,8 +3,6 @@ name: Deploy
 on:
   push:
     branches: [master]
-  schedule:
-    - cron: "45 5 * * *"
 
 concurrency:
   group: master-deploy
@@ -137,18 +135,25 @@ jobs:
           du -sh *
           df -h / /mnt
 
+      - name: Set branch environment variable
+        run: |
+          currentBranch=$(git branch --show-current)
+          now_date=$(date "+%Y-%m-%d_%H-%M-%S")
+          echo "project_branch=${currentBranch}-${now_date}" >> ${GITHUB_ENV}
+          
       - name: Create Archive
         run: |
           cd vertx-web-site.github.io
           tar --dereference --hard-dereference -cf ../website.tar .
+          cp ../website.tar vertx-doc-${project_branch}_build.tar.gz
+          ls
 
-      - name: Upload Archive
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
         with:
-          name: github-pages
-          path: website.tar
-          retention-days: 1
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          tag: ${{ env.project_branch }}
+          allowUpdates: true
+          # todo 修改为对应打包上传的标记名字
+          artifacts: "vertx-doc-*"
+          token: ${{ github.token }}
+          generateReleaseNotes: true
